@@ -1,0 +1,25 @@
+services:
+  pageindex-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pageindex-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Uploaded documents — persisted on the host
+      - D:/TFG/db/Docs:/app/docs
+      # Indexed tree structures (workspace) — persisted on the host
+      - D:/TFG/db/Trees:/app/workspace
+    environment:
+      # LLM provider — Anthropic Claude
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # Model to use (overrides the default in config.yaml)
+      PAGEINDEX_MODEL: ${PAGEINDEX_MODEL:-anthropic/claude-sonnet-4-5}
+      # Internal container paths (must match volume targets above)
+      PAGEINDEX_WORKSPACE: /app/workspace
+      PAGEINDEX_DOCS_DIR: /app/docs
+      # Disable ALL litellm telemetry — no calls to litellm.ai
+      LITELLM_TELEMETRY: "False"
+      LITELLM_LOCAL_MODEL_COST_MAP: "True"

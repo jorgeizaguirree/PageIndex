@@ -17,6 +17,10 @@ import yaml
 from pathlib import Path
 from types import SimpleNamespace as config
 
+# Disable litellm telemetry — no external calls except the LLM API itself
+import litellm as _litellm
+_litellm.telemetry = False
+
 # Backward compatibility: support CHATGPT_API_KEY as alias for OPENAI_API_KEY
 if not os.getenv("OPENAI_API_KEY") and os.getenv("CHATGPT_API_KEY"):
     os.environ["OPENAI_API_KEY"] = os.getenv("CHATGPT_API_KEY")
