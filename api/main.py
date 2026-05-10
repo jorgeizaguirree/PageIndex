@@ -23,7 +23,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 from pageindex import PageIndexClient
 
@@ -202,6 +202,28 @@ def get_pages(
         status = 404 if "not found" in data["error"].lower() else 400
         raise HTTPException(status_code=status, detail=data["error"])
     return {"doc_id": doc_id, "pages": pages, "content": data}
+
+
+@app.get("/documents/{doc_id}/file", tags=["Retrieval"])
+def get_document_file(doc_id: str):
+    """
+    Return the full original document file (PDF or Markdown).
+    """
+    client = _get_client()
+    if doc_id not in client.documents:
+        raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
+
+    doc_info = client.documents[doc_id]
+    file_path = doc_info.get("path")
+
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Original file not found on disk")
+
+    return FileResponse(
+        path=file_path,
+        filename=os.path.basename(file_path),
+        media_type="application/pdf" if doc_info.get("type") == "pdf" else "text/markdown"
+    )
 
 
 @app.delete("/documents/{doc_id}", tags=["Indexing"])
